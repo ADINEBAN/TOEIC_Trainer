@@ -426,7 +426,7 @@ export default function CardsScreen() {
                 style={[styles.modePill, mode === "lesson" ? styles.modePillActive : null]}
               >
                 <Ionicons
-                  color={mode === "lesson" ? "#FFFDF8" : colors.primaryDark}
+                  color={mode === "lesson" ? "#FFFFFF" : colors.primaryDark}
                   name="book-outline"
                   size={14}
                 />
@@ -441,7 +441,7 @@ export default function CardsScreen() {
               style={[styles.modePill, mode === "mine" ? styles.modePillActive : null]}
             >
               <Ionicons
-                color={mode === "mine" ? "#FFFDF8" : colors.primaryDark}
+                color={mode === "mine" ? "#FFFFFF" : colors.primaryDark}
                 name="albums-outline"
                 size={14}
               />
@@ -460,7 +460,7 @@ export default function CardsScreen() {
                 onPress={() => setShowAddForm((v) => !v)}
                 style={[styles.heroIconButton, styles.heroIconButtonPrimary]}
               >
-                <Ionicons color="#FFFDF8" name="add" size={20} />
+                <Ionicons color="#FFFFFF" name="add" size={20} />
               </Pressable>
             </View>
           ) : null}
@@ -501,9 +501,9 @@ export default function CardsScreen() {
         <ProgressBar
           accentColor="#E08A2E"
           label="Tiến độ ôn thẻ"
-          labelColor="#FFF9F0"
+          labelColor="#FFFFFF"
           rightLabel={currentCards.length ? `${cardIndex + 1}/${currentCards.length}` : "0/0"}
-          rightLabelColor="#FFF9F0"
+          rightLabelColor="#FFFFFF"
           value={progressValue}
         />
       </SurfaceCard>
@@ -713,11 +713,11 @@ export default function CardsScreen() {
             <>
               <View style={styles.flashcardTop}>
                 <View style={styles.flashcardBadge}>
-                  <Ionicons color="#FFFDF8" name="sparkles-outline" size={14} />
+                  <Ionicons color="#FFFFFF" name="sparkles-outline" size={14} />
                   <Text style={styles.flashcardBadgeText}>{mode === "lesson" ? "Thẻ bài học" : "Thẻ cá nhân"}</Text>
                 </View>
                 <Pressable onPress={() => speakText(currentCard.englishWord)} style={styles.listenButton}>
-                  <Ionicons color="#FFFDF8" name="volume-high" size={18} />
+                  <Ionicons color="#FFFFFF" name="volume-high" size={18} />
                 </Pressable>
               </View>
 
@@ -805,7 +805,7 @@ export default function CardsScreen() {
           ) : (
             <View style={styles.emptyState}>
               <View style={styles.emptyIconWrap}>
-                <Ionicons color="#FFFDF8" name="albums-outline" size={30} />
+                <Ionicons color="#FFFFFF" name="albums-outline" size={30} />
               </View>
               <Text style={styles.emptyTitle}>Chưa có flashcard</Text>
               <Text style={styles.emptyText}>
@@ -896,7 +896,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   collectionChipTextActive: {
-    color: "#FFFDF8",
+    color: "#FFFFFF",
   },
   collectionHeader: {
     alignItems: "center",
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   flashcard: {
-    backgroundColor: "#FFFDF8",
+    backgroundColor: "#FFFFFF",
     marginTop: spacing.sm,
     minHeight: 500,
     overflow: "hidden",
@@ -1001,7 +1001,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   flashcardBadgeText: {
-    color: "#FFFDF8",
+    color: "#FFFFFF",
     fontSize: 11,
     fontWeight: "900",
   },
@@ -1091,7 +1091,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   heroBadgeValue: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 24,
     fontWeight: "900",
   },
@@ -1141,7 +1141,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   heroTitle: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 24,
     fontWeight: "900",
     lineHeight: 29,
@@ -1176,7 +1176,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   inlineSwitchTextActive: {
-    color: "#FFFDF8",
+    color: "#FFFFFF",
   },
   input: {
     backgroundColor: "#F6F4EE",
@@ -1241,7 +1241,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   modePillTextActive: {
-    color: "#FFFDF8",
+    color: "#FFFFFF",
   },
   modePills: {
     flexDirection: "row",
@@ -1273,7 +1273,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   primaryBtnText: {
-    color: "#FFFDF8",
+    color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "900",
   },
@@ -1330,12 +1330,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   statValue: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 22,
     fontWeight: "900",
   },
   statValueSmall: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "900",
   },
