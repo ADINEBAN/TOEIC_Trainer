@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     width: "28%",
   },
   track: {
-    backgroundColor: "#E1D8C6",
+    backgroundColor: "rgba(120,160,200,0.28)",
     borderRadius: radius.pill,
     height: 12,
     overflow: "hidden",
