@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
   },
   inputShell: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,253,248,0.88)',
-    borderColor: 'rgba(191,181,159,0.74)',
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderColor: 'rgba(120,160,200,0.42)',
     borderRadius: radius.md,
     borderWidth: 1,
     flexDirection: 'row',
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
   },
   inputShellLight: {
-    backgroundColor: 'rgba(255,250,243,0.96)',
-    borderColor: '#DDD0B8',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderColor: 'rgba(120,160,200,0.38)',
     shadowOpacity: 0.05,
   },
   inputShellCompact: {
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   labelLight: {
-    color: '#5D625D',
+    color: '#5D7387',
   },
   labelCompact: {
     fontSize: 13,
