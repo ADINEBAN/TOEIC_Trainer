@@ -46,7 +46,7 @@ export default function AuthLayout({
 
 const styles = StyleSheet.create({
   backgroundGlow: {
-    backgroundColor: 'rgba(224, 138, 46, 0.18)',
+    backgroundColor: 'rgba(255, 183, 150, 0.30)',
     borderRadius: 220,
     height: 280,
     position: 'absolute',
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     width: 280,
   },
   backgroundGlowSecondary: {
-    backgroundColor: 'rgba(15, 107, 98, 0.12)',
+    backgroundColor: 'rgba(80, 160, 255, 0.18)',
     borderRadius: 240,
     height: 260,
     left: -90,
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     width: 180,
   },
   backgroundMid: {
-    backgroundColor: '#EDE4D3',
+    backgroundColor: 'rgba(255,255,255,0.50)',
     borderBottomLeftRadius: 72,
     borderBottomRightRadius: 72,
     height: 320,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     top: 30,
   },
   backgroundTop: {
-    backgroundColor: '#F4ECDD',
+    backgroundColor: '#D3E7FA',
     borderBottomLeftRadius: 76,
     borderBottomRightRadius: 76,
     height: 286,
@@ -105,9 +105,9 @@ const styles = StyleSheet.create({
     top: 0,
   },
   card: {
-    backgroundColor: 'rgba(255,253,248,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.78)',
     borderRadius: radius.xl,
-    borderColor: 'rgba(216,208,191,0.88)',
+    borderColor: 'rgba(255,255,255,0.72)',
     borderWidth: 1,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xl,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     paddingTop: 88,
   },
   safeArea: {
-    backgroundColor: '#F7F1E7',
+    backgroundColor: '#E9F2FB',
     flex: 1,
   },
 });
