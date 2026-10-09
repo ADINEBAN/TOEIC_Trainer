@@ -51,7 +51,7 @@ export default function UserTabsLayout() {
               focused={focused}
               icon={
                 <Ionicons
-                  color={focused ? colors.surface : colors.textMuted}
+                  color={focused ? '#FFFFFF' : colors.textMuted}
                   name={focused ? "home" : "home-outline"}
                   size={20}
                 />
@@ -69,7 +69,7 @@ export default function UserTabsLayout() {
               focused={focused}
               icon={
                 <Ionicons
-                  color={focused ? colors.surface : colors.textMuted}
+                  color={focused ? '#FFFFFF' : colors.textMuted}
                   name={focused ? "sparkles" : "sparkles-outline"}
                   size={20}
                 />
@@ -87,7 +87,7 @@ export default function UserTabsLayout() {
               focused={focused}
               icon={
                 <MaterialCommunityIcons
-                  color={focused ? colors.surface : colors.textMuted}
+                  color={focused ? '#FFFFFF' : colors.textMuted}
                   name={focused ? "cards" : "cards-outline"}
                   size={20}
                 />
@@ -105,7 +105,7 @@ export default function UserTabsLayout() {
               focused={focused}
               icon={
                 <Ionicons
-                  color={focused ? colors.surface : colors.textMuted}
+                  color={focused ? '#FFFFFF' : colors.textMuted}
                   name={focused ? "document-text" : "document-text-outline"}
                   size={20}
                 />
@@ -123,7 +123,7 @@ export default function UserTabsLayout() {
               focused={focused}
               icon={
                 <FontAwesome5
-                  color={focused ? colors.surface : colors.textMuted}
+                  color={focused ? '#FFFFFF' : colors.textMuted}
                   name="user-circle"
                   size={18}
                 />
@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: "center",
-    backgroundColor: "rgba(12,55,76,0.06)",
-    borderColor: "rgba(12,55,76,0.04)",
+    backgroundColor: "rgba(29,127,224,0.07)",
+    borderColor: "rgba(29,127,224,0.08)",
     borderRadius: 18,
     borderWidth: 1,
     height: 50,
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     shadowRadius: 22,
   },
   tabBar: {
-    backgroundColor: "rgba(255,255,255,0.97)",
+    backgroundColor: "rgba(255,255,255,0.86)",
     borderTopWidth: 0,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
