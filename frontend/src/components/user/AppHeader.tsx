@@ -46,7 +46,7 @@ export function AvatarBadge({ label = "A" }: { label?: string }) {
 const styles = StyleSheet.create({
   avatar: {
     alignItems: "center",
-    backgroundColor: colors.primaryDark,
+    backgroundColor: colors.primary,
     borderColor: "rgba(255,255,255,0.72)",
     borderRadius: radius.pill,
     borderWidth: 1,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     width: 50,
   },
   avatarText: {
-    color: colors.surface,
+    color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "900",
   },
@@ -68,8 +68,8 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     alignItems: "center",
-    backgroundColor: "rgba(255,253,248,0.72)",
-    borderColor: "rgba(191,181,159,0.6)",
+    backgroundColor: "rgba(255,255,255,0.68)",
+    borderColor: "rgba(255,255,255,0.75)",
     borderRadius: radius.pill,
     borderWidth: 1,
     height: 46,
