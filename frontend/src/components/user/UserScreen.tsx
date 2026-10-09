@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   glowBottom: {
-    backgroundColor: "rgba(224, 138, 46, 0.14)",
+    backgroundColor: "rgba(255, 183, 150, 0.28)",
     borderRadius: 220,
     bottom: 140,
     height: 260,
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     width: 260,
   },
   glowAccent: {
-    backgroundColor: "rgba(15,107,98,0.1)",
+    backgroundColor: "rgba(18,181,165,0.14)",
     borderRadius: 240,
     height: 220,
     left: "50%",
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     width: 220,
   },
   glowTop: {
-    backgroundColor: "rgba(15,107,98,0.12)",
+    backgroundColor: "rgba(80,160,255,0.20)",
     borderRadius: 260,
     height: 290,
     left: -90,
@@ -76,8 +76,8 @@ const styles = StyleSheet.create({
     width: 290,
   },
   mesh: {
-    backgroundColor: "rgba(255,253,248,0.8)",
-    borderColor: "rgba(191,181,159,0.56)",
+    backgroundColor: "rgba(255,255,255,0.55)",
+    borderColor: "rgba(255,255,255,0.7)",
     borderRadius: radius.xl,
     borderWidth: 1,
     bottom: 60,
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   topBand: {
-    backgroundColor: "#EDE4D2",
+    backgroundColor: "#CFE4F8",
     borderBottomLeftRadius: 64,
     borderBottomRightRadius: 64,
     height: 220,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     top: 0,
   },
   topPanel: {
-    backgroundColor: "rgba(255,255,255,0.34)",
+    backgroundColor: "rgba(255,255,255,0.42)",
     borderBottomLeftRadius: 54,
     borderBottomRightRadius: 54,
     height: 260,
