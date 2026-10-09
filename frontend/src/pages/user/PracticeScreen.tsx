@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     right: "50%",
   },
   currentPathBlock: {
-    backgroundColor: "#FFFCF4",
+    backgroundColor: "rgba(255,255,255,0.75)",
     borderColor: "#E1D4B8",
     borderRadius: radius.lg,
     borderWidth: 1,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   summaryCard: {
-    backgroundColor: "#FFFCF4",
+    backgroundColor: "rgba(255,255,255,0.75)",
     borderRadius: radius.xl,
     flex: 1,
     minHeight: 88,
