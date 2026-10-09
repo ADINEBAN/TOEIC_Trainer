@@ -241,8 +241,8 @@ export default function HomeScreen() {
           <ProgressBar
             accentColor="#F1A546"
             label="Tiến độ lộ trình"
-            labelColor="#FFF9F0"
-            rightLabelColor="#FFF9F0"
+            labelColor="#FFFFFF"
+            rightLabelColor="#FFFFFF"
             rightLabel={`${Math.round(roadmap?.progressPercent ?? 0)}%`}
             value={roadmap?.progressPercent ?? 0}
           />
@@ -527,12 +527,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   heroTargetValue: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 20,
     fontWeight: "900",
   },
   heroTitle: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 24,
     fontWeight: "900",
     lineHeight: 29,
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   liveRoadmapPercent: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "900",
   },
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   liveRoadmapTitle: {
-    color: "#FFF9F0",
+    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "900",
     marginTop: 2,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   pathScoreBubbleValue: {
-    color: "#FFFDF8",
+    color: "#FFFFFF",
     fontSize: 13,
     fontWeight: "900",
   },
@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   pathTagDark: {
     backgroundColor: colors.primaryDark,
-    color: "#FFFDF8",
+    color: "#FFFFFF",
   },
   pathTagMuted: {
     backgroundColor: "#E7E0D1",
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceDisabled,
   },
   primaryButtonText: {
-    color: "#FFFDF8",
+    color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "900",
     letterSpacing: 0.2,
