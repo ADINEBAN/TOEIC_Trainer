@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Audio } from "expo-av";
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
 import * as FileSystem from "expo-file-system";
 import * as Speech from "expo-speech";
 import { Platform } from "react-native";
@@ -35,7 +35,7 @@ type SpeechifyResponse = {
 const audioUriByCacheKey = new Map<string, string>();
 const pendingSynthesisByCacheKey = new Map<string, Promise<string>>();
 
-let activeSound: Audio.Sound | null = null;
+let activeSound: AudioPlayer | null = null;
 let activePlaybackId = 0;
 
 function normalizeText(text: string) {
@@ -107,12 +107,12 @@ async function stopActiveSound() {
   if (!sound) return;
 
   try {
-    await sound.stopAsync();
+    sound.pause();
   } catch {
-    // The sound may already have finished or unloaded.
+    // The player may already have finished or been removed.
   }
   try {
-    await sound.unloadAsync();
+    sound.remove();
   } catch {
     // Ignore cleanup failures; a new playback can still be attempted.
   }
@@ -199,34 +199,88 @@ async function playSpeechifyAudio(uri: string, options: PronunciationOptions): P
   const playbackId = ++activePlaybackId;
   await stopActiveSound();
   await Speech.stop().catch(() => undefined);
-  await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+  await setAudioModeAsync({ playsInSilentMode: true });
 
-  const { sound } = await Audio.Sound.createAsync(
-    { uri },
-    { progressUpdateIntervalMillis: 250, shouldPlay: true },
-    (status) => {
+  await new Promise<void>((resolve, reject) => {
+    const sound = createAudioPlayer({ uri }, { updateInterval: 250 });
+    activeSound = sound;
+    let started = false;
+    let loadTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const clearLoadTimer = () => {
+      if (!loadTimer) return;
+      clearTimeout(loadTimer);
+      loadTimer = null;
+    };
+
+    const subscription = sound.addListener("playbackStatusUpdate", (status) => {
       if (playbackId !== activePlaybackId) return;
-      if (!status.isLoaded) {
-        if (status.error) options.onError?.(new Error(status.error));
+
+      if (status.error) {
+        const error = new Error(status.error);
+        if (!started) {
+          clearLoadTimer();
+          subscription.remove();
+          if (activeSound === sound) activeSound = null;
+          try {
+            sound.remove();
+          } catch {
+            // Ignore cleanup failures; the caller falls back to the device voice.
+          }
+          reject(error);
+        } else {
+          options.onError?.(error);
+        }
         return;
       }
+
+      if (!status.isLoaded) return;
+
+      if (!started) {
+        started = true;
+        clearLoadTimer();
+        options.onStart?.();
+        resolve();
+      }
+
       if (status.didJustFinish) {
+        subscription.remove();
         if (activeSound === sound) activeSound = null;
-        void sound.unloadAsync().catch(() => undefined);
+        try {
+          sound.remove();
+        } catch {
+          // Ignore cleanup failures after playback finishes.
+        }
         options.onDone?.();
       }
-    },
-  );
+    });
 
-  activeSound = sound;
-  const status = await sound.getStatusAsync();
-  if (!status.isLoaded) {
-    if (activeSound === sound) activeSound = null;
-    await sound.unloadAsync().catch(() => undefined);
-    throw new Error(status.error || "Không phát được audio Speechify.");
-  }
+    loadTimer = setTimeout(() => {
+      if (started || playbackId !== activePlaybackId) return;
+      subscription.remove();
+      if (activeSound === sound) activeSound = null;
+      try {
+        sound.remove();
+      } catch {
+        // Ignore cleanup failures; the caller falls back to the device voice.
+      }
+      reject(new Error("Không phát được audio Speechify."));
+    }, 20000);
 
-  options.onStart?.();
+    try {
+      sound.play();
+    } catch (error) {
+      clearLoadTimer();
+      subscription.remove();
+      if (activeSound === sound) activeSound = null;
+      try {
+        sound.remove();
+      } catch {
+        // Ignore cleanup failures; the caller falls back to the device voice.
+      }
+      reject(error instanceof Error ? error : new Error("Không phát được audio Speechify."));
+    }
+  });
 }
 
 async function speakWithDeviceVoice(text: string, options: PronunciationOptions): Promise<void> {

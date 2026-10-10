@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useVideoPlayer, VideoView } from "expo-video";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
@@ -14,7 +15,29 @@ import { getUserLessons, updateLessonProgress } from "@/src/services/user.servic
 import { UserLessonApiItem } from "@/src/types/user-api";
 import { pushRoute } from "@/src/utils/navigation";
 
-type NativeVideoComponent = React.ComponentType<any> | null;
+function NativeLessonVideo({
+  durationSeconds,
+  onProgress,
+  url,
+}: {
+  durationSeconds: number;
+  onProgress: (seconds: number, duration: number) => void;
+  url: string;
+}) {
+  const player = useVideoPlayer(url, (instance) => {
+    instance.timeUpdateEventInterval = 1;
+  });
+
+  useEffect(() => {
+    const subscription = player.addListener("timeUpdate", ({ currentTime }) => {
+      const duration = player.duration > 0 ? player.duration : durationSeconds;
+      onProgress(currentTime, duration);
+    });
+    return () => subscription.remove();
+  }, [player, onProgress, durationSeconds]);
+
+  return <VideoView player={player} style={styles.nativeVideo} nativeControls contentFit="contain" />;
+}
 
 export default function LessonScreen() {
   const { auth, isHydrated } = useAuth();
@@ -25,8 +48,6 @@ export default function LessonScreen() {
   const [lessons, setLessons] = useState<UserLessonApiItem[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null);
   const [updatingProgress, setUpdatingProgress] = useState(false);
-  const [nativeVideoComponent, setNativeVideoComponent] = useState<NativeVideoComponent>(null);
-  const [nativeVideoMissing, setNativeVideoMissing] = useState(false);
   const lastSyncedSecondRef = useRef(0);
 
   const selectedModuleId = useMemo(() => {
@@ -34,30 +55,6 @@ export default function LessonScreen() {
     const parsed = Number(params.moduleId);
     return Number.isFinite(parsed) ? parsed : undefined;
   }, [params.moduleId]);
-
-  useEffect(() => {
-    if (Platform.OS === "web") return;
-    let cancelled = false;
-
-    const loadNativeVideo = async () => {
-      try {
-        const expoAv = await import("expo-av");
-        if (!cancelled) {
-          setNativeVideoComponent(() => expoAv.Video);
-        }
-      } catch {
-        if (!cancelled) {
-          setNativeVideoMissing(true);
-        }
-      }
-    };
-
-    void loadNativeVideo();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const loadLessons = useCallback(async () => {
     if (!auth.accessToken) return;
@@ -174,31 +171,15 @@ export default function LessonScreen() {
       });
     }
 
-    if (nativeVideoComponent) {
-      const Video = nativeVideoComponent;
-      return (
-        <Video
-          source={{ uri: currentLesson.videoUrl }}
-          style={styles.nativeVideo}
-          useNativeControls
-          resizeMode="contain"
-          shouldPlay={false}
-          onPlaybackStatusUpdate={(status: any) => {
-            if (!status?.isLoaded) return;
-            const current = Number((status.positionMillis ?? 0) / 1000);
-            const duration = Number((status.durationMillis ?? 0) / 1000) || currentLesson.durationSeconds;
-            void syncPlaybackProgress(current, duration);
-          }}
-        />
-      );
-    }
-
     return (
-      <View style={styles.placeholderWrap}>
-        <Text style={styles.placeholderText}>
-          Cần cài player mobile để phát video trong app: `npx expo install expo-av`
-        </Text>
-      </View>
+      <NativeLessonVideo
+        key={currentLesson.lessonId}
+        url={currentLesson.videoUrl}
+        durationSeconds={currentLesson.durationSeconds}
+        onProgress={(seconds, duration) => {
+          void syncPlaybackProgress(seconds, duration);
+        }}
+      />
     );
   };
 
@@ -234,9 +215,6 @@ export default function LessonScreen() {
         </View>
       </SurfaceCard>
 
-      {nativeVideoMissing && Platform.OS !== "web" ? (
-        <Text style={styles.warningText}>Gợi ý: cài `expo-av` để xem video trực tiếp trong app mobile.</Text>
-      ) : null}
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
       <Text style={styles.sectionTitle}>Danh sách bài học</Text>
