@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { colors, radius, spacing } from "@/src/assets/styles/user-theme";
 import AppHeader, { AvatarBadge } from "@/src/components/user/AppHeader";
@@ -9,6 +9,14 @@ import SurfaceCard from "@/src/components/user/SurfaceCard";
 import UserScreen from "@/src/components/user/UserScreen";
 import { useAuth } from "@/src/hooks/use-auth";
 import { logout } from "@/src/services/auth.service";
+import {
+  SPEECHIFY_MODEL,
+  SPEECHIFY_VOICE_NAME,
+  getSpeechifyApiKey,
+  removeSpeechifyApiKey,
+  saveSpeechifyApiKey,
+  speakTextWithSpeechify,
+} from "@/src/services/speechify-tts.service";
 import { getMyProfile, getMyStreak, updateMyTargetScore } from "@/src/services/user.service";
 
 export default function ProfileScreen() {
@@ -19,6 +27,10 @@ export default function ProfileScreen() {
   const [currentLevel, setCurrentLevel] = useState<string>(auth.user?.currentLevel ?? "");
   const [streakDays, setStreakDays] = useState<number>(0);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [speechifyApiKey, setSpeechifyApiKey] = useState("");
+  const [hasSavedSpeechifyKey, setHasSavedSpeechifyKey] = useState(false);
+  const [savingSpeechifyKey, setSavingSpeechifyKey] = useState(false);
+  const [testingSpeechify, setTestingSpeechify] = useState(false);
 
   useEffect(() => {
     if (!auth.accessToken) return;
@@ -46,6 +58,13 @@ export default function ProfileScreen() {
     loadProfile();
   }, [auth.accessToken]);
 
+  useEffect(() => {
+    void getSpeechifyApiKey().then((key) => {
+      setSpeechifyApiKey(key ?? "");
+      setHasSavedSpeechifyKey(Boolean(key));
+    });
+  }, []);
+
   const displayInitial = useMemo(() => {
     const source = fullName.trim() || email.trim() || "B";
     return source.charAt(0).toUpperCase();
@@ -61,6 +80,61 @@ export default function ProfileScreen() {
       const message =
         error instanceof Error ? error.message : "Không thể cập nhật mục tiêu.";
       Alert.alert("Hồ sơ", message);
+    }
+  };
+
+  const handleSaveSpeechifyKey = async () => {
+    if (!speechifyApiKey.trim()) {
+      Alert.alert("Giọng đọc Speechify", "Hãy nhập Speechify API key trước.");
+      return;
+    }
+
+    try {
+      setSavingSpeechifyKey(true);
+      await saveSpeechifyApiKey(speechifyApiKey);
+      setHasSavedSpeechifyKey(true);
+      Alert.alert("Giọng đọc Speechify", "Đã lưu API key trên thiết bị này.");
+    } catch (error) {
+      Alert.alert(
+        "Giọng đọc Speechify",
+        error instanceof Error ? error.message : "Không lưu được API key.",
+      );
+    } finally {
+      setSavingSpeechifyKey(false);
+    }
+  };
+
+  const handleRemoveSpeechifyKey = async () => {
+    try {
+      await removeSpeechifyApiKey();
+      setSpeechifyApiKey("");
+      setHasSavedSpeechifyKey(false);
+      Alert.alert("Giọng đọc Speechify", "Đã xóa API key khỏi thiết bị này.");
+    } catch {
+      Alert.alert("Giọng đọc Speechify", "Không xóa được API key.");
+    }
+  };
+
+  const handleTestSpeechify = async () => {
+    if (!hasSavedSpeechifyKey) {
+      Alert.alert("Giọng đọc Speechify", "Hãy lưu API key trước khi nghe thử.");
+      return;
+    }
+
+    setTestingSpeechify(true);
+    try {
+      await speakTextWithSpeechify("The meeting has been rescheduled to Friday afternoon.", {
+        disableFallback: true,
+        language: "en-US",
+        onDone: () => setTestingSpeechify(false),
+        onError: () => setTestingSpeechify(false),
+      });
+    } catch (error) {
+      setTestingSpeechify(false);
+      Alert.alert(
+        "Giọng đọc Speechify",
+        error instanceof Error ? error.message : "Không gọi được Speechify.",
+      );
     }
   };
 
@@ -141,6 +215,65 @@ export default function ProfileScreen() {
           <Text style={styles.infoLabel}>Mục tiêu hiện tại</Text>
           <Text style={styles.infoValue}>{targetScore} điểm</Text>
         </View>
+      </SurfaceCard>
+
+      <SurfaceCard style={styles.speechifyCard}>
+        <Text style={styles.sectionTitle}>Giọng đọc Speechify</Text>
+        <Text style={styles.speechifyDescription}>
+          Dán Speechify API key của bạn để ưu tiên giọng nam {SPEECHIFY_VOICE_NAME} ({SPEECHIFY_MODEL})
+          cho phát âm từ vựng và câu ví dụ. Key chỉ lưu trên thiết bị này; nếu chưa có key hoặc
+          Speechify lỗi, app sẽ dùng giọng máy mặc định.
+        </Text>
+
+        <TextInput
+          autoCapitalize="none"
+          autoCorrect={false}
+          onChangeText={setSpeechifyApiKey}
+          placeholder="Nhập Speechify API key"
+          placeholderTextColor={colors.textMuted}
+          secureTextEntry
+          style={styles.speechifyInput}
+          value={speechifyApiKey}
+        />
+
+        <Text style={styles.speechifyStatus}>
+          {hasSavedSpeechifyKey
+            ? "Đã lưu key trên thiết bị này. Audio George đã tạo sẽ được cache để nghe lại nhanh hơn."
+            : "Chưa lưu key trên thiết bị này."}
+        </Text>
+
+        <View style={styles.speechifyActions}>
+          <Pressable
+            disabled={savingSpeechifyKey}
+            onPress={handleSaveSpeechifyKey}
+            style={[styles.speechifyPrimaryButton, savingSpeechifyKey ? styles.buttonDisabled : null]}
+          >
+            <Ionicons color={colors.surface} name="key-outline" size={17} />
+            <Text style={styles.speechifyPrimaryButtonText}>
+              {savingSpeechifyKey ? "Đang lưu..." : "Lưu API key"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            disabled={testingSpeechify || !hasSavedSpeechifyKey}
+            onPress={handleTestSpeechify}
+            style={[
+              styles.speechifySecondaryButton,
+              testingSpeechify || !hasSavedSpeechifyKey ? styles.buttonDisabled : null,
+            ]}
+          >
+            <Ionicons color={colors.primaryDark} name="volume-high-outline" size={17} />
+            <Text style={styles.speechifySecondaryButtonText}>
+              {testingSpeechify ? "Đang đọc..." : "Nghe thử George"}
+            </Text>
+          </Pressable>
+        </View>
+
+        {hasSavedSpeechifyKey ? (
+          <Pressable onPress={handleRemoveSpeechifyKey} style={styles.removeKeyButton}>
+            <Text style={styles.removeKeyText}>Xóa API key khỏi thiết bị</Text>
+          </Pressable>
+        ) : null}
       </SurfaceCard>
 
       <Pressable
@@ -288,6 +421,80 @@ const styles = StyleSheet.create({
     color: colors.primaryDark,
     fontSize: 24,
     fontWeight: "900",
+  },
+  speechifyActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  speechifyCard: {
+    marginBottom: spacing.xl,
+  },
+  speechifyDescription: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  speechifyInput: {
+    backgroundColor: "rgba(255,255,255,0.78)",
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    color: colors.text,
+    fontSize: 14,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+  },
+  speechifyPrimaryButton: {
+    alignItems: "center",
+    backgroundColor: colors.primaryDark,
+    borderRadius: radius.pill,
+    flexDirection: "row",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 11,
+  },
+  speechifyPrimaryButtonText: {
+    color: colors.surface,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  speechifySecondaryButton: {
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.78)",
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 11,
+  },
+  speechifySecondaryButtonText: {
+    color: colors.primaryDark,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  speechifyStatus: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: spacing.sm,
+  },
+  buttonDisabled: {
+    opacity: 0.55,
+  },
+  removeKeyButton: {
+    alignSelf: "flex-start",
+    marginTop: spacing.md,
+    paddingVertical: 4,
+  },
+  removeKeyText: {
+    color: "#B42318",
+    fontSize: 12,
+    fontWeight: "800",
   },
   statsCard: {
     marginBottom: spacing.xl,

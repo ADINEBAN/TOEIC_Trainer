@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import * as Speech from "expo-speech";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -30,14 +31,14 @@ import {
   getMyFlashcards,
   updateMyFlashcard,
 } from "@/src/services/user.service";
+import {
+  getSpeechifyApiKey,
+  speakTextWithSpeechify,
+  type PronunciationOptions,
+} from "@/src/services/speechify-tts.service";
 import { vocabProgressStore } from "@/src/store/progress-store";
 import { FlashcardApiItem, FlashcardCollectionApiItem } from "@/src/types/user-api";
 import { replaceRoute } from "@/src/utils/navigation";
-
-type ExpoSpeechModule = {
-  speak: (text: string, options?: Record<string, unknown>) => void;
-  stop: () => void;
-};
 
 type TabMode = "lesson" | "mine";
 type AddMode = "manual" | "bulk";
@@ -48,22 +49,6 @@ type BulkFlashcardInput = {
   exampleSentence?: string;
   pronunciation?: string;
 };
-
-async function loadExpoSpeechModule(): Promise<ExpoSpeechModule | null> {
-  try {
-    const importer = new Function("m", "return import(m)") as (m: string) => Promise<unknown>;
-    const mod: any = await importer("expo-speech");
-    if (mod && typeof mod.speak === "function" && typeof mod.stop === "function") {
-      return mod as ExpoSpeechModule;
-    }
-    if (mod?.default && typeof mod.default.speak === "function" && typeof mod.default.stop === "function") {
-      return mod.default as ExpoSpeechModule;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 const QUICK_JSON_TEMPLATE = `{
   "topicName": "Business Meeting",
@@ -102,6 +87,8 @@ export default function CardsScreen() {
   const [rate, setRate] = useState(1);
   const [pitch, setPitch] = useState(1);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGeneratingSpeech, setIsGeneratingSpeech] = useState(false);
+  const [speechifyConfigured, setSpeechifyConfigured] = useState(false);
 
   const [showTopicEditor, setShowTopicEditor] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -185,25 +172,29 @@ export default function CardsScreen() {
     void loadAll();
   }, [loadAll]);
 
-  const speakText = (text: string) => {
+  useEffect(() => {
+    void getSpeechifyApiKey().then((key) => setSpeechifyConfigured(Boolean(key)));
+  }, []);
+
+  const speakWithDeviceVoice = (text: string, options: PronunciationOptions) => {
     if (!text.trim()) return;
 
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       void (async () => {
-        const speech = await loadExpoSpeechModule();
-        if (!speech) {
-          Alert.alert("Phát âm", "Chạy: npx expo install expo-speech");
-          return;
+        try {
+          await Speech.stop().catch(() => undefined);
+          Speech.speak(text, {
+            language: voiceRegion === "US" ? "en-US" : "en-GB",
+            onDone: options.onDone,
+            onError: options.onError,
+            onStart: options.onStart,
+            onStopped: options.onDone,
+            pitch: options.pitch ?? pitch,
+            rate: options.rate ?? rate,
+          });
+        } catch (error) {
+          options.onError?.(error instanceof Error ? error : new Error("Không phát được giọng máy."));
         }
-        setIsSpeaking(true);
-        speech.stop();
-        speech.speak(text, {
-          language: voiceRegion === "US" ? "en-US" : "en-GB",
-          pitch,
-          rate,
-          onDone: () => setIsSpeaking(false),
-          onStopped: () => setIsSpeaking(false),
-        });
       })();
       return;
     }
@@ -224,13 +215,56 @@ export default function CardsScreen() {
       utterance.lang = preferredLocale;
     }
 
-    utterance.rate = rate;
-    utterance.pitch = pitch;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.rate = options.rate ?? rate;
+    utterance.pitch = options.pitch ?? pitch;
+    utterance.onend = () => options.onDone?.();
+    utterance.onerror = () => options.onError?.(new Error("Không phát được giọng máy."));
     synth.cancel();
-    setIsSpeaking(true);
+    options.onStart?.();
     synth.speak(utterance);
+  };
+
+  const speakText = (text: string) => {
+    if (!text.trim()) return;
+
+    setIsGeneratingSpeech(false);
+    setIsSpeaking(false);
+    void (async () => {
+      try {
+        const source = await speakTextWithSpeechify(text, {
+          fallbackSpeak: speakWithDeviceVoice,
+          language: voiceRegion === "US" ? "en-US" : "en-GB",
+          onDone: () => {
+            setIsGeneratingSpeech(false);
+            setIsSpeaking(false);
+          },
+          onError: () => {
+            setIsGeneratingSpeech(false);
+            setIsSpeaking(false);
+          },
+          onGenerating: () => {
+            setSpeechifyConfigured(true);
+            setIsGeneratingSpeech(true);
+            setIsSpeaking(false);
+          },
+          onStart: () => {
+            setIsGeneratingSpeech(false);
+            setIsSpeaking(true);
+          },
+          pitch,
+          rate,
+        });
+
+        if (source === "speechify") {
+          setSpeechifyConfigured(true);
+        } else {
+          setSpeechifyConfigured(Boolean(await getSpeechifyApiKey()));
+        }
+      } catch {
+        setIsGeneratingSpeech(false);
+        setIsSpeaking(false);
+      }
+    })();
   };
 
   const createAndAttachToCollection = async (item: BulkFlashcardInput, collectionId: number | null) => {
@@ -742,7 +776,15 @@ export default function CardsScreen() {
                   </Text>
                 </Pressable>
                 <Text style={styles.readingStatus}>
-                  {isSpeaking ? "Đang phát âm..." : Platform.OS === "web" ? "Giọng đọc trên web" : "Giọng đọc di động"}
+                  {isGeneratingSpeech
+                    ? "Đang tạo giọng George..."
+                    : isSpeaking
+                      ? "Đang phát âm..."
+                      : speechifyConfigured
+                        ? "Giọng George · Speechify"
+                        : Platform.OS === "web"
+                          ? "Giọng đọc trên web"
+                          : "Giọng đọc di động"}
                 </Text>
               </View>
 
@@ -791,7 +833,21 @@ export default function CardsScreen() {
                   <>
                     <Text style={styles.meaningLabel}>Nghĩa</Text>
                     <Text style={styles.meaning}>{currentCard.meaningVi || "Không có nghĩa"}</Text>
-                    <Text style={styles.meaningLabel}>Ví dụ</Text>
+                    <View style={styles.exampleHeader}>
+                      <Text style={styles.meaningLabel}>Ví dụ</Text>
+                      {currentCard.exampleSentence ? (
+                        <Pressable
+                          onPress={(event) => {
+                            event.stopPropagation();
+                            speakText(currentCard.exampleSentence ?? "");
+                          }}
+                          style={styles.exampleListenButton}
+                        >
+                          <Ionicons color={colors.primaryDark} name="volume-medium" size={15} />
+                          <Text style={styles.exampleListenText}>Nghe ví dụ</Text>
+                        </Pressable>
+                      ) : null}
+                    </View>
                     <Text style={styles.example}>{currentCard.exampleSentence || "Chưa có câu ví dụ."}</Text>
                   </>
                 ) : (
@@ -1205,6 +1261,27 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     marginBottom: spacing.sm,
     marginTop: 6,
+  },
+  exampleHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  exampleListenButton: {
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderColor: colors.border,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+  },
+  exampleListenText: {
+    color: colors.primaryDark,
+    fontSize: 11,
+    fontWeight: "800",
   },
   meaningBox: {
     backgroundColor: "rgba(255,255,255,0.74)",
